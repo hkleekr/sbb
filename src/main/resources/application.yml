@@ -1,0 +1,39 @@
+server:
+  port:   ${PORT:8090}
+
+spring:
+  freemarker:
+    cache: false
+
+  thymeleaf:
+    prefix: file:src/main/resources/templates/
+    #      classpath:
+    suffix: .html
+    check-template-location: true
+    mode: HTML5
+    encoding: UTF-8
+    cache: false
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/sbb
+    username: postgres
+    password: 1234
+
+  devtools:
+    livereload:
+      enabled: true
+
+  sql:
+    init:
+      encoding: utf-8
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        format_sql: true
+        show_sql: true
+    hibernate:
+      ddl-auto: update
+#      ddl -> 엔터티를 기준으로 테이블 생성규칙 정의, update: 변경된 부분만 적용(개발환경), none/validate은 (운영환경)

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+
+</head>
+<body>
+<!--네비바-->
+    <nav th:replace="navbar :: navbarFragment"></nav>
+<!--질문영역-->
+<div class="container my-3">
+    <form>
+<!--        질문제시영역-->
+        <!--    제목-->
+        <div>
+            <div>
+                <h3 id="questionTitle" class="border-bottom py-2" th:text="${questionDetail.subject}">제목을 입력하세요</h3>
+            </div>
+            <!--    본문-->
+            <div class="card border-warning mb-3">
+                <div class="card-body text-success">
+                    <p class="card-text">
+                        <textarea id="questionContentModify" class="col-md-1 form-control" style="height:150px;" th:text="${questionDetail.content}"></textarea>
+                    </p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <input class="btn btn-outline-warning" type="button" id="btnQuestionModify" value="질문수정">
+                        <input class="btn btn-outline-warning" type="button" id="btnQuestionDelete" value="질문삭제">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--    글내용-->
+        <div>
+            <div>
+                <h3 class="border-bottom py-2">답변을 적는 영역</h3>
+            </div>
+            <div class="card border-warning mb-3">
+                <div class="card-body text-success">
+                    <p class="card-text">
+                        <textarea id="answerContent" class="col-md-1 form-control" style="height:150px;"></textarea>
+                    </p>
+                    <input id="btnAnswerSave" class="btn btn-warning" type="button" value="답변등록">
+                </div>
+            </div>
+        </div>
+<!--        답변제시영역-->
+        <div>
+            <h5 class="border-bottom py-2"><span th:text="${questionDetail.answerList.size()} + '개의 답변이 있습니다'"></span></h5>
+            <div class="answer_list">
+            <!--    본문-->
+            <th:block th:each="answer : ${questionDetail.answerList}">
+<!--            <div th:text="${answer.content}"></div>-->
+                <!--                답변은 'question.java'의 "answerList와 연결되어있는데, @GetMapping("/board/detail")에서 attributeName을 "questionDetail"로 정의-->
+                <div class="card border-warning mb-3">
+                    <div class="card-body text-success">
+                        <p class="card-text">
+                            <textarea class="col-md-1 form-control" id="commentContent" style="height:150px;" th:text="${answer.content}"></textarea>
+                        </p>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <input class="btn btn-outline-warning" type="button" id="btnAnswerModify" value="답변수정" th:answer_id="${answer.id}">
+                            <input class="btn btn-outline-warning" type="button" id="btnAnswerDelete" value="답변삭제" th:answer_id="${answer.id}">
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // 질문 수정
+        document.getElementById("btnQuestionModify").addEventListener("click", () => {
+            let params =  new FormData;
+            params.append("id", "[[${param.id}]]")
+            params.append("subject", document.getElementById("questionTitle").innerText)
+            params.append("content", document.getElementById("questionContentModify").value)
+
+            fetch("/sbb/question", {
+                method: "PUT",
+                body: params,
+                headers : {}
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json()
+                    }
+                })
+                //콜백함수
+                .then((res) => {
+                    console.log(res.responseCode);
+                    if(res.responseCode == "질문수정성공") {
+                        alert("수정성공");
+                        window.location.reload();
+                    }
+                })
+
+                .catch((error) => alert(error))
+        })
+
+        // 질문 삭제
+        document.getElementById("btnQuestionDelete").addEventListener("click", () => {
+            let params =  new FormData;
+            params.append("id", "[[${param.id}]]")
+
+            fetch("/sbb/question", {
+                method: "DELETE",
+                body: params,
+                headers : {}
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json()
+                    }
+                })
+                //콜백함수
+                .then((res) => {
+                    console.log(res.responseCode);
+                    if(res.responseCode == "질문삭제성공") {
+                        alert("삭제성공");
+                        window.location.href = "/sbb";
+                    }
+                })
+
+                .catch((error) => alert(error))
+        })
+
+        // 답변 저장
+        document.getElementById("btnAnswerSave").addEventListener("click", () => {
+            let params =  new FormData;
+            params.append("content", document.getElementById("answerContent").value)
+            params.append("question", "[[${param.id}]]")
+
+            fetch("/sbb/detail", {
+                method: "POST",
+                body: params,
+                headers : {}
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json()
+                    }
+                })
+                //콜백함수
+                .then((res) => {
+                    console.log(res.responseCode);
+                    if(res.responseCode == "답변저장성공") {
+                        alert("등록성공");
+                        window.location.reload();
+                    }
+                })
+
+                .catch((error) => alert(error))
+        })
+
+        // 답변 수정 & 삭제: 수정과 삭제는 한 부모 아래 자식으로 셋팅
+        document.getElementsByClassName("answer_list")[0].addEventListener("click", (e) => {
+            if(e.target.id == "btnAnswerModify") {
+                let params =  new FormData;
+                params.append("id", e.target.getAttribute("answer_id"))
+                params.append("content", e.target.parentElement.parentElement.firstElementChild.firstElementChild.value)
+
+                fetch("/sbb/detail", {
+                    method: "PUT",
+                    body: params,
+                    headers : {}
+                })
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json()
+                        }
+                    })
+                    //콜백함수
+                    .then((res) => {
+                        console.log(res.responseCode);
+                        if(res.responseCode == "답변수정성공") {
+                            alert("등록성공");
+                            window.location.reload();
+                        }
+                    })
+
+                    .catch((error) => alert(error))
+
+            } else if(e.target.id == "btnAnswerDelete") {
+                let params = new FormData;
+                params.append("id", e.target.getAttribute("answer_id"))
+
+                fetch("/sbb/detail", {
+                    method: "DELETE",
+                    body: params,
+                    headers : {}
+                })
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json()
+                        }
+                    })
+                    //콜백함수
+                    .then((res) => {
+                        console.log(res.responseCode);
+                        if(res.responseCode == "답변삭제성공") {
+                            alert("삭제성공");
+                            window.location.reload();
+                        }
+                    })
+                    .catch((error) => alert(error))
+            }
+        })
+    })
+</script>
+</body>
+</html>
